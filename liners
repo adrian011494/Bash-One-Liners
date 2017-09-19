@@ -1,10 +1,11 @@
+#!/usr/bin/env python3
 import argparse
 
 import sys
 import textwrap
 import readline
 import functools
-import urllib
+import urllib.request
 
 import itertools
 
@@ -52,7 +53,7 @@ class LinersWeb(object):
 
     @require_keywords
     def fetch(self):
-        resutl = urllib.urlopen(_SEARCHURL_ + '+'.join(self._opts.keywords)).read()
+        resutl = urllib.request.urlopen(_SEARCHURL_ + '+'.join(self._opts.keywords)).read()
         self.html = resutl
 
     def parcer(self):
