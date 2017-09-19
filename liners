@@ -60,21 +60,23 @@ class LinersWeb(object):
         soup = BeautifulSoup(self.html, 'html.parser')
         oneliners = soup.find('div', attrs={'class': 'oneliners'})  # .find('div', attrs = {'class': 'well'})
         liners = oneliners.find_all('div', attrs={'class': 'well'})
-        index=0;
-        for item in itertools.islice(liners, self._opts.num):
-            #Title
-            title = item.find('h3',attrs={'class': 'summary'})
-            index += 1
-            print(self.colors.index+str(index)+self.colors.reset+" "+self.colors.title+title.a.text+self.colors.reset)
-            #Hyperlink
-            print(self.colors.url+_SITEURL_+title.a['href']+"\n"+self.colors.reset)
-            #Code
-            code = item.find('pre',attrs={'class': 'line'})
-            print(self.colors.prompt+code.text+self.colors.reset)
-            #Explanation
-            explanation = item.find('div',attrs={'class': 'explanation'})
-            print(self.colors.metadata+explanation.text+self.colors.reset)
-
+        if(len(liners)):
+            index=0;
+            for item in itertools.islice(liners, self._opts.num):
+                #Title
+                title = item.find('h3',attrs={'class': 'summary'})
+                index += 1
+                print(self.colors.index+str(index)+self.colors.reset+" "+self.colors.title+title.a.text+self.colors.reset)
+                #Hyperlink
+                print(self.colors.url+_SITEURL_+title.a['href']+"\n"+self.colors.reset)
+                #Code
+                code = item.find('pre',attrs={'class': 'line'})
+                print(self.colors.prompt+code.text+self.colors.reset)
+                #Explanation
+                explanation = item.find('div',attrs={'class': 'explanation'})
+                print(self.colors.metadata+explanation.text+self.colors.reset)
+        else:
+            print(self.colors.metadata + "No matching one-liners for the query: "+'+'.join(self._opts.keywords) + self.colors.reset)
 
 class LinersArgumentParser(argparse.ArgumentParser):
     """Custom argument parser for liners."""
@@ -131,10 +133,11 @@ def parse_args(args=None, namespace=None):
 def main():
     opts = parse_args()
 
-    print("\n")
+    print("")
     liners = LinersWeb(opts)
     liners.fetch()
     liners.parcer()
+    print("")
 
 
 if __name__ == '__main__':
