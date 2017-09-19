@@ -33,7 +33,7 @@ class NoKeywordsException(Exception):
 Colors = collections.namedtuple('Colors', 'index, title, url, metadata, abstract, prompt, reset')
 
 def require_keywords(method):
-    # Require keywords to be set before we run a GooglerCmd method. If
+    # Require keywords to be set before we run a LinersWeb method. If
     # no keywords have been set, raise a NoKeywordsException.
     @functools.wraps(method)
     def enforced_method(self, *args, **kwargs):
@@ -45,15 +45,15 @@ def require_keywords(method):
 
 
 class LinersWeb(object):
-    def __init__(self, opts):
+    def __init__(self, args):
         # super().__init__()
         self.colors = Colors(*[COLORMAP[c] for c in 'GKlgxy'], reset=COLORMAP['x'])
-        self._opts = opts
-        self.keywords = opts.keywords
+        self._args = args
+        self.keywords = args.keywords
 
     @require_keywords
     def fetch(self):
-        resutl = urllib.request.urlopen(_SEARCHURL_ + '+'.join(self._opts.keywords)).read()
+        resutl = urllib.request.urlopen(_SEARCHURL_ + '+'.join(self._args.keywords)).read()
         self.html = resutl
 
     def parcer(self):
@@ -62,7 +62,7 @@ class LinersWeb(object):
         liners = oneliners.find_all('div', attrs={'class': 'well'})
         if(len(liners)):
             index=0;
-            for item in itertools.islice(liners, self._opts.num):
+            for item in itertools.islice(liners, self._args.num):
                 #Title
                 title = item.find('h3',attrs={'class': 'summary'})
                 index += 1
@@ -76,7 +76,7 @@ class LinersWeb(object):
                 explanation = item.find('div',attrs={'class': 'explanation'})
                 print(self.colors.metadata+explanation.text+self.colors.reset)
         else:
-            print(self.colors.metadata + "No matching one-liners for the query: "+'+'.join(self._opts.keywords) + self.colors.reset)
+            print(self.colors.metadata + "No matching one-liners for the query: " +'+'.join(self._args.keywords) + self.colors.reset)
 
 class LinersArgumentParser(argparse.ArgumentParser):
     """Custom argument parser for liners."""
@@ -108,7 +108,7 @@ class LinersArgumentParser(argparse.ArgumentParser):
             raise argparse.ArgumentTypeError('%s is not a non-negative integer' % arg)
 
 
-def parse_args(args=None, namespace=None):
+def init_args(args=None, namespace=None):
     """Parse liners arguments/options.
     Parameters
     ----------
@@ -127,17 +127,20 @@ def parse_args(args=None, namespace=None):
     addarg('-n', '--count', dest='num', type=argparser.positive_int,
            default=10, metavar='N', help='show N results (default 10)')
     addarg("keywords", nargs='*', metavar='KEYWORD', help="Query to search in http://www.bashoneliners.com/")
-    return argparser.parse_args(args, namespace)
+    return argparser
 
 
 def main():
-    opts = parse_args()
-
-    print("")
-    liners = LinersWeb(opts)
-    liners.fetch()
-    liners.parcer()
-    print("")
+    opts = init_args()
+    args= opts.parse_args()
+    if len(args.keywords)>0:
+        print("")
+        liners = LinersWeb(args)
+        liners.fetch()
+        liners.parcer()
+        print("")
+    else:
+        opts.print_help()
 
 
 if __name__ == '__main__':
